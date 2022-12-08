@@ -23,5 +23,13 @@
             android:src="@drawable/tfl2_logo" />
     </androidx.appcompat.widget.Toolbar>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="tflite v2.10.0"
+        android:textColor="#ff0000"
+        android:layout_marginTop="60dp"
+        />
+
     <include layout="@layout/bottom_sheet_layout"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
