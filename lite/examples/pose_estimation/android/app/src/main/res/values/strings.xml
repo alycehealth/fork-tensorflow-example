@@ -3,7 +3,8 @@
     <string name="tfe_pe_request_permission">This app needs camera permission.</string>
     <string name="tfe_pe_tv_score">Score: %.2f</string>
     <string name="tfe_pe_tv_model">Model: </string>
-    <string name="tfe_pe_tv_fps">Fps: %d</string>
+    <string name="tfe_pe_tv_fps">%.1f FPS (</string>
+    <string name="tfe_pe_tv_duration">%d ms)</string>
     <string name="tfe_pe_tv_device">Device: </string>
     <string name="tfe_pe_tv_classification_value">- %s</string>
     <string name="tfe_pe_tv_pose_classification">Pose Classification</string>

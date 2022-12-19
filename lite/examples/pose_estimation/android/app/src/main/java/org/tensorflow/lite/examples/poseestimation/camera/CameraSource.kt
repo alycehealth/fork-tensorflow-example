@@ -66,9 +66,7 @@ class CameraSource(
     private lateinit var imageBitmap: Bitmap
 
     /** Frame count that have been processed so far in an one second interval to calculate FPS. */
-    private var fpsTimer: Timer? = null
-    private var frameProcessedInOneSecondInterval = 0
-    private var framesPerSecond = 0
+    private var lastProcessedAtMs = -1L
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
@@ -208,17 +206,8 @@ class CameraSource(
     fun resume() {
         imageReaderThread = HandlerThread("imageReaderThread").apply { start() }
         imageReaderHandler = Handler(imageReaderThread!!.looper)
-        fpsTimer = Timer()
-        fpsTimer?.scheduleAtFixedRate(
-            object : TimerTask() {
-                override fun run() {
-                    framesPerSecond = frameProcessedInOneSecondInterval
-                    frameProcessedInOneSecondInterval = 0
-                }
-            },
-            0,
-            1000
-        )
+
+        lastProcessedAtMs = -1
     }
 
     fun close() {
@@ -233,16 +222,21 @@ class CameraSource(
         detector = null
         classifier?.close()
         classifier = null
-        fpsTimer?.cancel()
-        fpsTimer = null
-        frameProcessedInOneSecondInterval = 0
-        framesPerSecond = 0
+        lastProcessedAtMs = -1
     }
 
     // process image
     private fun processImage(bitmap: Bitmap) {
         val persons = mutableListOf<Person>()
         var classificationResult: List<Pair<String, Float>>? = null
+
+
+        if (lastProcessedAtMs > 0) {
+            val now = System.currentTimeMillis()
+            listener?.onFPSListener(now - lastProcessedAtMs)
+        }
+        lastProcessedAtMs = System.currentTimeMillis()
+
 
         synchronized(lock) {
             detector?.estimatePoses(bitmap)?.let {
@@ -255,11 +249,6 @@ class CameraSource(
                     }
                 }
             }
-        }
-        frameProcessedInOneSecondInterval++
-        if (frameProcessedInOneSecondInterval == 1) {
-            // send fps to view
-            listener?.onFPSListener(framesPerSecond)
         }
 
         // if the model returns only one item, show that item's score.
@@ -320,7 +309,7 @@ class CameraSource(
     }
 
     interface CameraSourceListener {
-        fun onFPSListener(fps: Int)
+        fun onFPSListener(fpsMs: Long)
 
         fun onDetectedInfo(personScore: Float?, poseLabels: List<Pair<String, Float>>?)
     }

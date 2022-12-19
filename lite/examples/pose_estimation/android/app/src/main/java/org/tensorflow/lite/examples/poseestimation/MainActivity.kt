@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvScore: TextView
     private lateinit var tvFPS: TextView
+    private lateinit var tvDuration: TextView
     private lateinit var spnDevice: Spinner
     private lateinit var spnModel: Spinner
     private lateinit var spnTracker: Spinner
@@ -137,6 +138,7 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         tvScore = findViewById(R.id.tvScore)
         tvFPS = findViewById(R.id.tvFps)
+        tvDuration = findViewById(R.id.tvDuration)
         spnModel = findViewById(R.id.spnModel)
         spnDevice = findViewById(R.id.spnDevice)
         spnTracker = findViewById(R.id.spnTracker)
@@ -186,8 +188,11 @@ class MainActivity : AppCompatActivity() {
             if (cameraSource == null) {
                 cameraSource =
                     CameraSource(surfaceView, object : CameraSource.CameraSourceListener {
-                        override fun onFPSListener(fps: Int) {
-                            tvFPS.text = getString(R.string.tfe_pe_tv_fps, fps)
+                        override fun onFPSListener(durationMs: Long) {
+                            runOnUiThread {
+                                tvFPS.text = getString(R.string.tfe_pe_tv_fps, (1000f / durationMs))
+                                tvDuration.text = getString(R.string.tfe_pe_tv_duration, durationMs)
+                            }
                         }
 
                         override fun onDetectedInfo(
