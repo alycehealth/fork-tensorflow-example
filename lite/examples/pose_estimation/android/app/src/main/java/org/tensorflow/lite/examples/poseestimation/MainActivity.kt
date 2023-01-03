@@ -20,8 +20,12 @@ import android.Manifest
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Process
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.SurfaceView
 import android.view.View
 import android.view.WindowManager
@@ -37,6 +41,8 @@ import kotlinx.coroutines.launch
 import org.tensorflow.lite.examples.poseestimation.camera.CameraSource
 import org.tensorflow.lite.examples.poseestimation.data.Device
 import org.tensorflow.lite.examples.poseestimation.ml.*
+import java.text.DecimalFormat
+import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -59,6 +65,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvScore: TextView
     private lateinit var tvFPS: TextView
+    private lateinit var btnRecord: ImageButton
+    private lateinit var tvRecordResult: TextView
+    private lateinit var tvRecordDuration: TextView
     private lateinit var tvDuration: TextView
     private lateinit var spnDevice: Spinner
     private lateinit var spnModel: Spinner
@@ -69,6 +78,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvClassificationValue3: TextView
     private lateinit var swClassification: SwitchCompat
     private lateinit var vClassificationOption: View
+
+    private var isRecording = false
+    private var durationList = mutableListOf<Long>()
+    private var recordStartedAt: Long = -1
+
     private var cameraSource: CameraSource? = null
     private var isClassifyPose = false
     private val requestPermissionLauncher =
@@ -136,6 +150,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         // keep screen on while app is running
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        btnRecord = findViewById(R.id.btnRecord)
+        tvRecordResult = findViewById(R.id.tvRecordResult)
+        tvRecordDuration = findViewById(R.id.tvRecordDuration)
         tvScore = findViewById(R.id.tvScore)
         tvFPS = findViewById(R.id.tvFps)
         tvDuration = findViewById(R.id.tvDuration)
@@ -154,6 +171,55 @@ class MainActivity : AppCompatActivity() {
         swClassification.setOnCheckedChangeListener(setClassificationListener)
         if (!isCameraPermissionGranted()) {
             requestPermission()
+        }
+
+        btnRecord.setOnClickListener {
+            val wasRecording = it.tag != "stopped"
+            // change img
+            (it as ImageButton).setImageResource(if (wasRecording) R.drawable.ic_play else R.drawable.ic_stop)
+            // change tag
+            it.tag = if (wasRecording) "stopped" else "recording"
+
+
+            if (wasRecording) {
+                if (durationList.isNotEmpty()) {
+                    val averageDuration = durationList.average()
+                    val maxDuration = durationList.maxOrNull()
+                    val minDuration = durationList.minOrNull()
+
+                    if (maxDuration != null && minDuration != null) {
+                        val avgFps = String.format("%.1f", 1000f / averageDuration)
+                        val maxFps = String.format("%.1f", 1000f / minDuration)
+                        val minFps = String.format("%.1f", 1000f / maxDuration)
+                        durationList.clear()
+
+                        val result = SpannableString("${avgFps}/${maxFps}/${minFps}")
+                        val pattern = Pattern.compile("\\d+\\.\\d(/)\\d+\\.\\d(/)\\d+\\.\\d")
+                        val matcher = pattern.matcher(result)
+                        if (matcher.matches()) {
+                            for (i in 1..matcher.groupCount()) {
+                                result.setSpan(
+                                    ForegroundColorSpan(Color.parseColor("#8E9C8E")),
+                                    matcher.start(i),
+                                    matcher.end(i),
+                                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                )
+                            }
+                        }
+
+                        tvRecordResult.text = result
+                        tvRecordDuration.text =
+                            "For ${DecimalFormat("#,###,###").format((System.currentTimeMillis() - recordStartedAt) / 1000)} sec"
+                    }
+                }
+                recordStartedAt = -1
+            } else {
+                tvRecordResult.text = "..recording.."
+                tvRecordDuration.text = ""
+                recordStartedAt = System.currentTimeMillis()
+            }
+
+            this.isRecording = !wasRecording
         }
     }
 
@@ -190,8 +256,21 @@ class MainActivity : AppCompatActivity() {
                     CameraSource(surfaceView, object : CameraSource.CameraSourceListener {
                         override fun onFPSListener(durationMs: Long) {
                             runOnUiThread {
-                                tvFPS.text = getString(R.string.tfe_pe_tv_fps, (1000f / durationMs))
-                                tvDuration.text = getString(R.string.tfe_pe_tv_duration, durationMs)
+                                val fps = getString(
+                                    R.string.tfe_pe_tv_fps,
+                                    (1000f / durationMs)
+                                )
+                                val ms = getString(
+                                    R.string.tfe_pe_tv_duration,
+                                    durationMs
+                                )
+                                tvFPS.text = fps.padStart(10)
+                                tvDuration.text = ms.padStart(8)
+
+                                // accumulate if in recording
+                                if (isRecording) {
+                                    durationList.add(durationMs)
+                                }
                             }
                         }
 
@@ -215,7 +294,6 @@ class MainActivity : AppCompatActivity() {
                                 )
                             }
                         }
-
                     }).apply {
                         prepareCamera()
                     }

@@ -23,13 +23,108 @@
             android:src="@drawable/tfl2_logo" />
     </androidx.appcompat.widget.Toolbar>
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="tflite v2.10.0"
-        android:textColor="#ff0000"
-        android:layout_marginTop="60dp"
-        />
+        android:layout_marginTop="?android:attr/actionBarSize"
+        android:orientation="vertical">
 
-    <include layout="@layout/bottom_sheet_layout"/>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#aa000000"
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:text="tflite v2.10.0"
+                android:textColor="#ff0000" />
+
+            <TextView
+                android:id="@+id/tvDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:gravity="end"
+                android:textColor="#ffff00"
+                android:textSize="16dp"
+                android:typeface="monospace"
+                tools:text="(132 ms)" />
+
+            <TextView
+                android:id="@+id/tvFps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@id/tvDuration"
+                android:gravity="end"
+                android:textColor="#ffff00"
+                android:textSize="16dp"
+                android:typeface="monospace"
+                tools:text="13.3 FPS" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="2dp"
+            android:background="@drawable/border"
+            android:orientation="horizontal"
+            android:paddingEnd="14dp"
+            android:gravity="center"
+            >
+
+            <ImageButton
+                android:id="@+id/btnRecord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:backgroundTint="#00ffff00"
+                android:src="@drawable/ic_play"
+                android:tag="stopped" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/o_tv_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="FPS(avg/mx/mn)"
+                    android:textColor="#119F11"
+                    android:textSize="16dp" />
+
+                <TextView
+                    android:id="@+id/tvRecordResult"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:textColor="#00ff00"
+                    android:textSize="16dp"
+                    android:typeface="monospace"
+                    tools:text="13.8/14.8/11.1" />
+
+                <TextView
+                    android:id="@+id/tvRecordDuration"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:text="for 132455s"
+                    android:gravity="end"
+                    android:textColor="#8E9C8E"
+                    android:textSize="13dp" />
+
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+    <include layout="@layout/bottom_sheet_layout" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
